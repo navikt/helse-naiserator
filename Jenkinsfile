@@ -25,25 +25,29 @@ node {
                     println "SCM vars:"
                     println groovy.json.JsonOutput.toJson(scmVars);
 
-                    def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
-                    def ctx = sh(script: "kubectl config current-context", returnStdout: true).trim()
-
-                    def response = createDeployment(token, "navikt/${it}", currentTag, ctx, "deploy ${it} to ${ctx}")
-                    deploymentId = response.id
-                    createDeploymentStatus(token, "navikt/${it}", deploymentId, "pending")
-
-                    println "Deploying ${currentTag} ${it} to cluster ${ctx}"
-
-                    def retval = sh script: "kubectl apply -f naiserator.yaml", returnStatus: true
-
-                    createDeploymentStatus(token, "navikt/${it}", deploymentId, "in_progress")
-
-                    if (retval != 0) {
-                        println "Deploy not successful"
-                        createDeploymentStatus(token, "navikt/${it}", deploymentId, "failure")
+                    if (scmVars.GIT_COMMIT == scmVars.GIT_PREVIOUS_COMMIT) {
+                        println "Skipping because we have alreayd built this commit"
                     } else {
-                        println "Deploy ok"
-                        createDeploymentStatus(token, "navikt/${it}", deploymentId, "success")
+                        def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
+                        def ctx = sh(script: "kubectl config current-context", returnStdout: true).trim()
+
+                        def response = createDeployment(token, "navikt/${it}", currentTag, ctx, "deploy ${it} to ${ctx}")
+                        deploymentId = response.id
+                        createDeploymentStatus(token, "navikt/${it}", deploymentId, "pending")
+
+                        println "Deploying ${currentTag} ${it} to cluster ${ctx}"
+
+                        def retval = sh script: "kubectl apply -f naiserator.yaml", returnStatus: true
+
+                        createDeploymentStatus(token, "navikt/${it}", deploymentId, "in_progress")
+
+                        if (retval != 0) {
+                            println "Deploy not successful"
+                            createDeploymentStatus(token, "navikt/${it}", deploymentId, "failure")
+                        } else {
+                            println "Deploy ok"
+                            createDeploymentStatus(token, "navikt/${it}", deploymentId, "success")
+                        }
                     }
                 }
             }
