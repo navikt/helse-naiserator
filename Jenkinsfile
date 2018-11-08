@@ -20,7 +20,12 @@ node {
                         }
                     }
 
-                    checkout([$class: 'GitSCM', branches: [[name: 'refs/tags/**']], userRemoteConfigs: [[url: "https://github.com/navikt/${it}.git"]]])
+                    def scmVars = checkout([$class: 'GitSCM', branches: [[name: 'refs/tags/**']], userRemoteConfigs: [[url: "https://github.com/navikt/${it}.git"]]])
+
+                    def slurper = new groovy.json.JsonSlurperClassic()
+
+                    println "SCM vars:"
+                    println slurper.parseText(scmVars);
 
                     def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
                     def ctx = sh(script: "kubectl config current-context", returnStdout: true).trim()
