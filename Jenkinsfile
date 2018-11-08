@@ -25,7 +25,7 @@ node {
                     def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
                     def ctx = sh(script: "kubectl config current-context", returnStdout: true).trim()
 
-                    def response = createDeployment(token, "navikt/${it}", currentTag, "staging", "deploy ${it} to ${ctx}")
+                    def response = createDeployment(token, "navikt/${it}", currentTag, ctx, "deploy ${it} to ${ctx}")
                     deploymentId = response.id
                     createDeploymentStatus(token, "navikt/${it}", deploymentId, "pending")
 
