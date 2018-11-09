@@ -39,9 +39,7 @@ node {
                     if (scmVars.GIT_PREVIOUS_COMMIT && scmVars.GIT_COMMIT == scmVars.GIT_PREVIOUS_COMMIT) {
                         println "Skipping because we have alreayd built this commit"
                     } else {
-                        def naiseratorFile = new File('naiserator.yaml')
-
-                        if (!naiseratorFile.exists()) {
+                        if (fileExists('naiserator.yaml')) {
                             println "Skipping because naiserator.yaml does not exist"
                         } else {
                             def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
