@@ -1,4 +1,5 @@
 node {
+    def appId = 19726
     def repos = ["helse-sykepengebehandling", "helse-sykepengesoknadfilter"]
 
     properties([pipelineTriggers([pollSCM('* * * * *')])])
@@ -15,14 +16,22 @@ node {
                 dir("${it}") {
                     def token
                     withCredentials([file(credentialsId: 'teamHelseGithubApp', variable: 'privateKey')]) {
-                        def jwt = sh(script: "generate-jwt.sh ${privateKey} 19726", returnStdout: true).trim()
+                        def jwt = sh(script: "generate-jwt.sh ${privateKey} ${appId}", returnStdout: true).trim()
 
                         withEnv(['HTTPS_PROXY=http://webproxy-utvikler.nav.no:8088', "JWT=${jwt}"]) {
                             token = sh(script: 'generate-installation-token.sh $JWT', returnStdout: true).trim()
                         }
                     }
 
-                    def scmVars = checkout([$class: 'GitSCM', branches: [[name: 'refs/tags/**']], userRemoteConfigs: [[url: "https://github.com/navikt/${it}.git"]]])
+                    def scmVars = checkout([
+                            $class: 'GitSCM',
+                            branches: [
+                                    [name: 'refs/tags/**']
+                            ],
+                            userRemoteConfigs: [
+                                    [url: "https://github.com/navikt/${it}.git"]
+                            ]
+                    ])
 
                     println "SCM vars:"
                     println groovy.json.JsonOutput.toJson(scmVars);
@@ -30,25 +39,31 @@ node {
                     if (scmVars.GIT_PREVIOUS_COMMIT && scmVars.GIT_COMMIT == scmVars.GIT_PREVIOUS_COMMIT) {
                         println "Skipping because we have alreayd built this commit"
                     } else {
-                        def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
-                        def ctx = sh(script: "kubectl config current-context", returnStdout: true).trim()
+                        def naiseratorFile = new File('naiserator.yaml')
 
-                        def response = createDeployment(token, "navikt/${it}", currentTag, ctx, "deploy ${it} to ${ctx}")
-                        deploymentId = response.id
-                        createDeploymentStatus(token, "navikt/${it}", deploymentId, "pending")
-
-                        println "Deploying ${currentTag} ${it} to cluster ${ctx}"
-
-                        def retval = sh script: "kubectl apply -f naiserator.yaml", returnStatus: true
-
-                        createDeploymentStatus(token, "navikt/${it}", deploymentId, "in_progress")
-
-                        if (retval != 0) {
-                            println "Deploy not successful"
-                            createDeploymentStatus(token, "navikt/${it}", deploymentId, "failure")
+                        if (!naiseratorFile.exists()) {
+                            println "Skipping because naiserator.yaml does not exist"
                         } else {
-                            println "Deploy ok"
-                            createDeploymentStatus(token, "navikt/${it}", deploymentId, "success")
+                            def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
+                            def ctx = sh(script: "kubectl config current-context", returnStdout: true).trim()
+
+                            def response = createDeployment(token, "navikt/${it}", currentTag, ctx, "deploy ${it} to ${ctx}")
+                            deploymentId = response.id
+                            createDeploymentStatus(token, "navikt/${it}", deploymentId, "pending")
+
+                            println "Deploying ${currentTag} ${it} to cluster ${ctx}"
+
+                            def retval = sh script: "kubectl apply -f naiserator.yaml", returnStatus: true
+
+                            createDeploymentStatus(token, "navikt/${it}", deploymentId, "in_progress")
+
+                            if (retval != 0) {
+                                println "Deploy not successful"
+                                createDeploymentStatus(token, "navikt/${it}", deploymentId, "failure")
+                            } else {
+                                println "Deploy ok"
+                                createDeploymentStatus(token, "navikt/${it}", deploymentId, "success")
+                            }
                         }
                     }
                 }
