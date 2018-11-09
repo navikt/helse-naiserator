@@ -10,8 +10,8 @@ node {
     def cwd = sh(script: 'pwd', returnStdout: true).trim()
 
     withEnv(["PATH+GITHUB_APPS_SUPPORT=${cwd}/github-apps-support/bin"]) {
-        stage("${this.REPO_NAME}") {
-            dir("${this.REPO_NAME}") {
+        stage("${REPO_NAME}") {
+            dir("${REPO_NAME}") {
                 def token
                 withCredentials([file(credentialsId: 'teamHelseGithubApp', variable: 'privateKey')]) {
                     def jwt = sh(script: "generate-jwt.sh ${privateKey} ${appId}", returnStdout: true).trim()
@@ -27,7 +27,7 @@ node {
                                 [name: 'refs/tags/**']
                         ],
                         userRemoteConfigs: [
-                                [url: "https://github.com/navikt/${this.REPO_NAME}.git"]
+                                [url: "https://github.com/navikt/${REPO_NAME}.git"]
                         ]
                 ])
 
@@ -43,22 +43,22 @@ node {
                         def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
                         def ctx = sh(script: "kubectl config current-context", returnStdout: true).trim()
 
-                        def response = createDeployment(token, "navikt/${this.REPO_NAME}", currentTag, ctx, "deploy ${this.REPO_NAME} to ${ctx}")
+                        def response = createDeployment(token, "navikt/${REPO_NAME}", currentTag, ctx, "deploy ${REPO_NAME} to ${ctx}")
                         deploymentId = response.id
-                        createDeploymentStatus(token, "navikt/${this.REPO_NAME}", deploymentId, "pending")
+                        createDeploymentStatus(token, "navikt/${REPO_NAME}", deploymentId, "pending")
 
-                        println "Deploying ${currentTag} ${this.REPO_NAME} to cluster ${ctx}"
+                        println "Deploying ${currentTag} ${REPO_NAME} to cluster ${ctx}"
 
                         def retval = sh script: "kubectl apply -f naiserator.yaml", returnStatus: true
 
-                        createDeploymentStatus(token, "navikt/${this.REPO_NAME}", deploymentId, "in_progress")
+                        createDeploymentStatus(token, "navikt/${REPO_NAME}", deploymentId, "in_progress")
 
                         if (retval != 0) {
                             println "Deploy not successful"
-                            createDeploymentStatus(token, "navikt/${this.REPO_NAME}", deploymentId, "failure")
+                            createDeploymentStatus(token, "navikt/${REPO_NAME}", deploymentId, "failure")
                         } else {
                             println "Deploy ok"
-                            createDeploymentStatus(token, "navikt/${this.REPO_NAME}", deploymentId, "success")
+                            createDeploymentStatus(token, "navikt/${REPO_NAME}", deploymentId, "success")
                         }
                     }
                 }

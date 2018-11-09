@@ -2,13 +2,10 @@ def repos = ["helse-sykepengebehandling", "helse-sykepengesoknadfilter", "helse-
 
 repos.each {
     pipelineJob("${it}") {
-        parameters {
-            stringParam("REPO_NAME", "${it}")
-        }
-
         definition {
             cps {
-                script(readFileFromWorkspace('deploy-pipeline.groovy'))
+                scriptFile = readFileFromWorkspace('deploy-pipeline.groovy').replace("${REPO_NAME}", "${it}")
+                script(scriptFile)
             }
         }
     }
