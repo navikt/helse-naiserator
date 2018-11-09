@@ -2,8 +2,8 @@ def repos = ["helse-sykepengebehandling", "helse-sykepengesoknadfilter", "helse-
 
 repos.each {
     pipelineJob("${it}") {
-        environmentVariables {
-            env('REPO_NAME', "${it}")
+        parameters {
+            stringParam("REPO_NAME", "${it}")
         }
 
         definition {
