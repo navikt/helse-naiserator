@@ -1,7 +1,7 @@
 def repos = ["helse-sykepengebehandling", "helse-sykepengesoknadfilter", "helse-soknadsvalidator"]
 
 repos.each {
-    workflowJob("${it}") {
+    pipelineJob("${it}") {
         environmentVariables {
             env('REPO_NAME', "${it}")
         }
