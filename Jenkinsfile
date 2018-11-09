@@ -1,6 +1,6 @@
 node {
     def appId = 19726
-    def repos = ["helse-sykepengebehandling", "helse-sykepengesoknadfilter"]
+    def repos = ["helse-sykepengebehandling", "helse-sykepengesoknadfilter", "helse-soknadsvalidator"]
 
     properties([pipelineTriggers([pollSCM('* * * * *')])])
 
