@@ -1,4 +1,6 @@
 node {
+    def repos = ["helse-sykepengebehandling", "helse-sykepengesoknadfilter"]
+
     properties([pipelineTriggers([pollSCM('* * * * *')])])
 
     sh "kubectl config use-context preprod-fss"
@@ -8,7 +10,7 @@ node {
     def cwd = sh(script: 'pwd', returnStdout: true).trim()
 
     withEnv(["PATH+GITHUB_APPS_SUPPORT=${cwd}/github-apps-support/bin"]) {
-        ["helse-sykepengebehandling", "helse-sykepengesoknadfilter"].each {
+        repos.each {
             stage("${it}") {
                 dir("${it}") {
                     def token
