@@ -39,7 +39,9 @@ node {
                 } else {
                     sh 'ls -l'
 
-                    if (fileExists('naiserator.yaml')) {
+                    def retval = sh script: 'test -f naiserator.yaml', returnStatus: true
+
+                    if (retval != 0) {
                         println "Skipping because naiserator.yaml does not exist"
                     } else {
                         def currentTag = sh(script: 'git describe --tags --abbrev=0', returnStdout: true).trim()
@@ -51,7 +53,7 @@ node {
 
                         println "Deploying ${currentTag} ${REPO_NAME} to cluster ${ctx}"
 
-                        def retval = sh script: "kubectl apply -f naiserator.yaml", returnStatus: true
+                        retval = sh script: "kubectl apply -f naiserator.yaml", returnStatus: true
 
                         createDeploymentStatus(token, "navikt/${REPO_NAME}", deploymentId, "in_progress")
 
