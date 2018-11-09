@@ -37,6 +37,8 @@ node {
                 if (scmVars.GIT_PREVIOUS_COMMIT && scmVars.GIT_COMMIT == scmVars.GIT_PREVIOUS_COMMIT) {
                     println "Skipping because we have alreayd built this commit"
                 } else {
+                    sh 'ls -l'
+
                     if (fileExists('naiserator.yaml')) {
                         println "Skipping because naiserator.yaml does not exist"
                     } else {
