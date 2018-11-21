@@ -5,7 +5,7 @@ node {
         def scmVars = checkout([
                 $class           : 'GitSCM',
                 branches         : [
-                        [name: 'refs/tags/**']
+                        [name: '*/master']
                 ],
                 userRemoteConfigs: [
                         [url: "ssh://git@github.com/navikt/helse-iac.git"]
