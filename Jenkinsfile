@@ -27,13 +27,11 @@ node {
 
     stage("preprod-fss") {
         sh "kubectl config use-context preprod-fss"
-        sh "find ./preprod -name naiserator-fss.yaml -print0 | xargs -0 -n1 kubectl apply -f"
         sh "find ./preprod -name naiserator.yaml -print0 | xargs -0 -n1 kubectl apply -f"
     }
 
     stage("prod-fss") {
         sh "kubectl config use-context prod-fss"
-        sh "find ./prod -name naiserator-fss.yaml -print0 | xargs -0 -n1 kubectl apply -f"
         sh "find ./prod -name naiserator.yaml -print0 | xargs -0 -n1 kubectl apply -f"
     }
 }
