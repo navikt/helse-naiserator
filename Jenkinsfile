@@ -17,13 +17,11 @@ node {
     }
     stage("preprod-sbs") {
         sh "kubectl config use-context preprod-sbs"
-        sh "find ./preprod -name naiserator-sbs.yaml -print0 | xargs -0 -n1 kubectl apply -f"
         sh "find ./preprod -name alerts-sbs.yaml -exec kubectl -f {} \\;"
     }
 
     stage("prod-sbs") {
         sh "kubectl config use-context prod-sbs"
-        sh "find ./prod -name naiserator-sbs.yaml -print0 | xargs -0 -n1 kubectl apply -f"
         sh "find ./prod -name alerts-sbs.yaml -exec kubectl -f {} \\;"
     }
 
